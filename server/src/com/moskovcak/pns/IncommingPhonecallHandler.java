@@ -17,18 +17,20 @@ public class IncommingPhonecallHandler implements NotificationEventHandler {
 	public void handleNotification(JSONObject args) {
 		log.info("Incomming phone call!");
 		String from = null;
-		String state = null; 
+		String state = null;
+		String contactName = null;
 		try {
 			from = args.getString("from");
 			state = args.getString("state");
+			contactName = args.getString("contactName");
 		} catch (JSONException e) {
-			log.severe("Can't read required argumetns from JSON data: " + e.getLocalizedMessage());
+			log.severe("Can't read required arguments from JSON data: " + e.getLocalizedMessage());
 		}
 		EventNotification notification = NotificationFactory.getNotification("libnotify");
 		if (state.equals(RINGING))
-			notification.show("Incoming call from: " + from , "", "SMS");
+			notification.show("Incoming call from: " + contactName + "("+ from +")", null, "PhoneCall");
 		else if (state.equals(IDLE))
-			notification.show("Call ended: " + from , "", "SMS");
+			notification.show("Call ended: " + contactName + "("+ from +")", null, "PhoneCall");
 	}
 
 }

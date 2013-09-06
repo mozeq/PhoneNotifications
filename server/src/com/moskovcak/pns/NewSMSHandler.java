@@ -37,15 +37,17 @@ public class NewSMSHandler implements NotificationEventHandler {
 		log.info("Got new SMS!");
 		String from = null;
 		String messageBody = null;
+		String contactName = null;
 		try {
 			from = args.getString("from");
 			messageBody = args.getString("message");
+			contactName = args.getString("contactName");
 		} catch (JSONException e) {
 			log.severe("Can't read required argumetns from JSON data: " + e.getLocalizedMessage());
 		}
 		
 		EventNotification notification = NotificationFactory.getNotification("libnotify");
-		notification.show("New message from: " + from, messageBody, "SMS");
+		notification.show("New message from: " + contactName + "("+ from +")", messageBody, "SMS");
 		
 	}
 
