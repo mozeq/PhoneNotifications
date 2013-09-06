@@ -55,7 +55,7 @@ public class EventNotificator extends Activity {
     	EditText message = (EditText) findViewById(R.id.message);
     	String messageStr = message.getText().toString(); 
     	
-    	String response = nServer.notifySMS("123456", messageStr);
+        String response = nServer.notifySMS("123456", "nakej contact", messageStr);
     	
     	target.setText(response);
     }
@@ -63,7 +63,7 @@ public class EventNotificator extends Activity {
     public void notifyPhoneCall(View view) {
     	EditText phoneCall = (EditText) findViewById(R.id.editText2);
     	
-    	String response = nServer.notifyPhoneCall(phoneCall.getText().toString(), "ringing");
+        String response = nServer.notifyPhoneCall(phoneCall.getText().toString(), "fake", "ringing");
     	EditText target = (EditText) findViewById(R.id.editText1);
     	target.setText(response);
     }

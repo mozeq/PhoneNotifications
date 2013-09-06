@@ -158,11 +158,12 @@ public class NotificationServer {
 			formData = new HashMap<String, String>();
 	}
 
-	public String notifySMS(String phoneNumber, String message) {
+	public String notifySMS(String phoneNumber, String contactName, String message) {
 		initFormData();
 		formData.put("eventName", "newSMS");
 		formData.put("from", phoneNumber);
 		formData.put("message", message);
+		formData.put("contactName", contactName);
 		try {
 			return sendDataJSON(formData);
 		} catch (JSONException ex) {
@@ -171,11 +172,12 @@ public class NotificationServer {
 		}
 	}
 	
-	public String notifyPhoneCall(String phoneNumber, String state) {
+	public String notifyPhoneCall(String phoneNumber, String contactName, String state) {
 		initFormData();
 		formData.put("eventName", "incommingCall");
 		formData.put("from", phoneNumber);
 		formData.put("state", state);
+		formData.put("contactName", contactName);
 		
 		try {
 			return sendDataJSON(formData);

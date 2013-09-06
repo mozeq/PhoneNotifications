@@ -25,7 +25,10 @@ class PhoneCallReceiver extends BroadcastReceiver
     	Log.i(TAG, "Ringing state: " + callState);
     	Log.i(TAG, "incomingNumber: " + incomingNumber);
     	Log.i(TAG, "Received phone call!");
-    	this.nServer.notifyPhoneCall(incomingNumber, callState);
+    	
+    	String contactName = ContactInfoProvider.getNameForNumber(context, incomingNumber);
+    	
+    	this.nServer.notifyPhoneCall(incomingNumber, contactName, callState);
     }
 
 }

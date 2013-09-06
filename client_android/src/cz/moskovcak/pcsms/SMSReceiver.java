@@ -3,7 +3,10 @@ package cz.moskovcak.pcsms;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.ContactsContract.PhoneLookup;
 import android.telephony.SmsMessage;
 import android.util.Log;
 
@@ -42,8 +45,12 @@ class SMSreceiver extends BroadcastReceiver
 
                 String strMsgBody = smsmsg.getMessageBody().toString();
                 String strMsgSrc = smsmsg.getOriginatingAddress();
-                nServer.notifySMS(strMsgSrc, strMsgBody);
-                strMessage += "SMS from " + strMsgSrc + " : " + strMsgBody;                    
+                
+                /* let's try to retrieve contact name for the number */
+                String contactName = ContactInfoProvider.getNameForNumber(context, strMsgSrc);
+                
+                nServer.notifySMS(strMsgSrc, contactName, strMsgBody);
+                strMessage += "SMS from " + contactName + "("+strMsgSrc + ") : " + strMsgBody;                    
 
                 Log.i(TAG, strMessage);
             }
