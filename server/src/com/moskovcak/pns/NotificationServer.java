@@ -38,7 +38,7 @@ public class NotificationServer {
     	public void handle(HttpExchange t) throws IOException {
     		/* method table */
     		methodDispatch.put("newSMS", NewSMSHandler.getInstance());
-    		methodDispatch.put("incommingCall", new IncommingPhonecallHandler());
+    		methodDispatch.put("incomingCall", new IncommingPhonecallHandler());
     		
         	InputStream input = t.getRequestBody();
         	int contentLength = Integer.parseInt(t.getRequestHeaders().get("Content-length").get(0));
