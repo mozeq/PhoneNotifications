@@ -43,7 +43,8 @@ server_sock.bind(("",PORT_ANY))
 server_sock.listen(1)
 port = server_sock.getsockname()[1]
 
-uuid = "00001101-0000-1000-8000-00805f9b34fb"
+#uuid = "00001101-0000-1000-8000-00805f9b34fb"
+uuid = "1e0ca4ea-299d-4335-93eb-27fcfe7fa848"
 advertise_service( server_sock, "SampleServer",
                    service_id = uuid,
                    service_classes = [ uuid, SERIAL_PORT_CLASS ],

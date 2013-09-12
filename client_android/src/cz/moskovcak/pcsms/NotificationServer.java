@@ -5,5 +5,6 @@ public interface NotificationServer {
     String notifyPhoneCall(String phoneNumber, String contactName, String state);
     void save();
     void load();
-    void connect();
+    boolean connect();
+    void disconnect();
 }

@@ -2,7 +2,6 @@ package cz.moskovcak.pcsms;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -18,16 +17,19 @@ import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.util.Log;
 
 public class NotificationServerBluetooth implements NotificationServer {
-public class NotificationServerBluetooth extends NotificationServer {
     private static NotificationServerBluetooth sNotificationServerBluetooth = null;
     private final static int REQUEST_ENABLE_BT = 1;
     private final String TAG = "cz.moskovcak.pcsms";
     private final BluetoothAdapter mBluetoothAdapter;
     private BluetoothDevice mDevice = null;
+    private BluetoothDevice mConnectedDevice = null;
     private DataOutputStream output = null;
     private final Activity activity;
 
@@ -63,6 +65,7 @@ public class NotificationServerBluetooth extends NotificationServer {
             activity.startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
         }
 
+        load();
         Log.i(TAG, "bluetooth seems to be enabled");
     }
 
@@ -79,27 +82,59 @@ public class NotificationServerBluetooth extends NotificationServer {
      *
      */
     public void setDevice(BluetoothDevice device) {
+        Log.i(TAG, "setDevice: " + mDevice + "->" + device);
         mDevice = device;
+        save();
     }
 
-    public void connect() {
+    public void setDevice(String btDeviceAddress) {
+        setDevice(mBluetoothAdapter.getRemoteDevice(btDeviceAddress));
+    }
+
+    private void resetBt() {
+        Log.i(TAG, "Resetting bluetooth");
+
+        //BT state changed receiver
+        BluetoothStateChangedReceiver mBluetoothReceiver = new BluetoothStateChangedReceiver(this);
+        IntentFilter mBluetoothIntentFilter= new IntentFilter();
+        mBluetoothIntentFilter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);
+        activity.registerReceiver(mBluetoothReceiver, mBluetoothIntentFilter);
+        if (mBluetoothAdapter.disable() == false) {
+            if (mBluetoothAdapter.getState() != BluetoothAdapter.STATE_OFF)
+                Log.e(TAG, "Can't disable the bluetooth adapter");
+        }
+        Log.i(TAG, "Waiting for bluetooth to settle");
+    }
+
+    public boolean connect() {
         if (mDevice == null) {
             Log.e(TAG, "No device selected");
-            return;
+            return false;
         }
-        final UUID myUUID = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb");
+        //final UUID myUUID = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb");
+        final UUID myUUID = UUID.fromString("1e0ca4ea-299d-4335-93eb-27fcfe7fa848");
+
         try {
-            if (output == null) {
+            if (mConnectedDevice != mDevice) {
+                System.out.println(mConnectedDevice + " " + mDevice);
+                Log.i(TAG, "Device has changed, connecting to: " + mDevice.getName());
+                if (output != null)
+                    output.close();  // always close streams!
                 BluetoothSocket socket = mDevice.createRfcommSocketToServiceRecord(myUUID);
                 mBluetoothAdapter.cancelDiscovery();
                 socket.connect();  //first need to connect, otherwise we get an error: Transport endpoint is not connected
                 output = new DataOutputStream(socket.getOutputStream());
+                mConnectedDevice = mDevice;
             }
-            //output.close();
+            Log.i(TAG, "Connected to: " + mDevice.getAddress());
+            return true;
         } catch (IOException e) {
-            Log.e(TAG, "Can't connect to: " + mDevice.getName() +":"+e.getLocalizedMessage());
+            Log.e(TAG, "Can't connect to: " + mDevice.getName() +" : "+e.getLocalizedMessage());
+            resetBt();
         }
-        Log.i(TAG, "Connected to: " + mDevice.getAddress());
+        // we shouldn't get here if the connection was established
+        Log.e(TAG, "Connecting to: " + mDevice.getName() + " failed");
+        return false;
     }
 
     public void reconnect() {
@@ -116,7 +151,7 @@ public class NotificationServerBluetooth extends NotificationServer {
      * | 4bytes length | data | '|' as a separator
      */
     @SuppressLint("NewApi")
-	public String sendDataJSON(Map<String, String> formData) throws JSONException {
+    public String sendDataJSON(Map<String, String> formData) throws JSONException {
         if (output == null) {
             Log.e(TAG, "Not connected!");
             return "Not sent!";
@@ -142,6 +177,10 @@ public class NotificationServerBluetooth extends NotificationServer {
         for (int trySend = retries; trySend > 0; trySend --) {
             try {
                 System.out.println("Sending: " + responseBytes.length + " bytes");
+                if (output == null)
+                    if (!connect()) {
+                        Log.e(TAG, "Can't connect");
+                    }
                 output.writeInt(responseBytes.length);
                 output.write(responseBytes);
                 return "Sent";
@@ -184,4 +223,39 @@ public class NotificationServerBluetooth extends NotificationServer {
             return ex.getLocalizedMessage();
         }
     }
+
+    public void load() {
+        SharedPreferences settings = activity.getPreferences(Context.MODE_PRIVATE);
+        String btDeviceAddress = settings.getString("btDeviceAddress", null);
+        if (btDeviceAddress != null) {
+            mDevice = mBluetoothAdapter.getRemoteDevice(btDeviceAddress);
+        }
+    }
+
+    public void save() {
+        // We need an Editor object to make preference changes.
+        // All objects are from android.context.Context
+        SharedPreferences settings = activity.getPreferences(Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = settings.edit();
+        editor.putString("btDeviceAddress", mDevice.getAddress());
+
+        // Commit the edits!
+        editor.commit();
+    }
+
+    @Override
+    public void disconnect() {
+        mConnectedDevice = null;
+        if (output != null) {
+            try {
+                output.close();
+                output = null;
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        }
+
+    }
+
 }

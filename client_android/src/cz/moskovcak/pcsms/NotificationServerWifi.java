@@ -31,7 +31,7 @@ public class NotificationServerWifi implements NotificationServer {
         this.connect();
     }
 
-    public void connect() {
+    public boolean connect() {
         URL url = null;
         try {
             url = new URL("http://192.168.1.148:8000/notification/");
@@ -45,6 +45,7 @@ public class NotificationServerWifi implements NotificationServer {
             this.urlConnection.setDoInput(true);
             this.urlConnection.setDoOutput(true);
             this.urlConnection.setUseCaches(false);
+            return true;
         }
         catch (ProtocolException e) {
             Log.v(TAG, "Can't open http connection: ", e);
@@ -52,6 +53,8 @@ public class NotificationServerWifi implements NotificationServer {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
+
+        return false;
     }
 
 
@@ -192,6 +195,11 @@ public class NotificationServerWifi implements NotificationServer {
         ;
     }
 
-    public void load(){};
+    public void load(){}
+
+    @Override
+    public void disconnect() {
+        ;
+    };
 
 }
