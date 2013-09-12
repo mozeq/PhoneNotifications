@@ -26,7 +26,7 @@ def notify_call(**kwargs):
     CallNotify.show()
 
 def notify_sms(**kwargs):
-    SMSNotification=Notify.Notification.new ("New sms from {0} ({1})".format(kwargs["from"], kwargs["contactName"]), kwargs["message"], "dialog-information")
+    SMSNotification=Notify.Notification.new ("New sms from {0} ({1})".format(kwargs["callerId"], kwargs["contactName"]), kwargs["message"], "dialog-information")
     SMSNotification.show ()
 
 def hdne(**kwargs):
