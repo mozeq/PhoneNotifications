@@ -19,18 +19,19 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.util.Log;
 
-public class NotificationServerWifi extends NotificationServer {
+public class NotificationServerWifi implements NotificationServer {
     private static final String TAG = "PCSMS";
     private static final String ENCODING = "UTF-8";
     private HttpURLConnection urlConnection = null;
     private Map<String, String> formData = null;
+    private final Activity activity;
 
     NotificationServerWifi(Activity activity) {
-        super(activity);
+        this.activity = activity;
         this.connect();
     }
 
-    private void connect() {
+    public void connect() {
         URL url = null;
         try {
             url = new URL("http://192.168.1.148:8000/notification/");
@@ -186,4 +187,11 @@ public class NotificationServerWifi extends NotificationServer {
             return ex.getLocalizedMessage();
         }
     }
+
+    public void save() {
+        ;
+    }
+
+    public void load(){};
+
 }

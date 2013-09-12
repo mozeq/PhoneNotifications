@@ -21,6 +21,7 @@ import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
 import android.util.Log;
 
+public class NotificationServerBluetooth implements NotificationServer {
 public class NotificationServerBluetooth extends NotificationServer {
     private static NotificationServerBluetooth sNotificationServerBluetooth = null;
     private final static int REQUEST_ENABLE_BT = 1;
@@ -28,6 +29,7 @@ public class NotificationServerBluetooth extends NotificationServer {
     private final BluetoothAdapter mBluetoothAdapter;
     private BluetoothDevice mDevice = null;
     private DataOutputStream output = null;
+    private final Activity activity;
 
     public static NotificationServerBluetooth getServer(Activity activity) {
         if (sNotificationServerBluetooth != null)
@@ -47,7 +49,7 @@ public class NotificationServerBluetooth extends NotificationServer {
     }
 
     private NotificationServerBluetooth(Activity activity) throws Exception {
-        super(activity);
+        this.activity = activity;
         System.out.println("Starting bluetooth");
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         if (mBluetoothAdapter == null) {
