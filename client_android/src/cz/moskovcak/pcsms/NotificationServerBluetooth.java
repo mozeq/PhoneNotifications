@@ -26,7 +26,7 @@ import android.util.Log;
 public class NotificationServerBluetooth implements NotificationServer {
     private static NotificationServerBluetooth sNotificationServerBluetooth = null;
     private final static int REQUEST_ENABLE_BT = 1;
-    private final String TAG = "cz.moskovcak.pcsms";
+    private final static String TAG = "cz.moskovcak.pcsms";
     private final BluetoothAdapter mBluetoothAdapter;
     private BluetoothDevice mDevice = null;
     private BluetoothDevice mConnectedDevice = null;
@@ -41,22 +41,17 @@ public class NotificationServerBluetooth implements NotificationServer {
             if (sNotificationServerBluetooth != null)
                 return sNotificationServerBluetooth;
 
-            try {
-                sNotificationServerBluetooth = new NotificationServerBluetooth(activity);
-            } catch (Exception e) {
-                //ignore and return null
-            }
+            sNotificationServerBluetooth = new NotificationServerBluetooth(activity);
             return sNotificationServerBluetooth;
         }
     }
 
-    private NotificationServerBluetooth(Activity activity) throws Exception {
+    private NotificationServerBluetooth(Activity activity) {
         this.activity = activity;
         System.out.println("Starting bluetooth");
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         if (mBluetoothAdapter == null) {
             System.err.println("bluetooth is not available");
-            throw new Exception("Bluetooth is not available");
         }
         System.out.println(mBluetoothAdapter.isEnabled());
         if (!mBluetoothAdapter.isEnabled()) {
@@ -82,9 +77,12 @@ public class NotificationServerBluetooth implements NotificationServer {
      *
      */
     public void setDevice(BluetoothDevice device) {
-        Log.i(TAG, "setDevice: " + mDevice + "->" + device);
-        mDevice = device;
-        save();
+        if (device != null) {
+            //Log.i(TAG, "setDevice: " + mDevice.hashCode() + "->" + device.hashCode());
+            if (mDevice == null || mDevice.getAddress() != device.getAddress())
+                mDevice = device;
+            save();
+        }
     }
 
     public void setDevice(String btDeviceAddress) {
@@ -115,8 +113,10 @@ public class NotificationServerBluetooth implements NotificationServer {
         final UUID myUUID = UUID.fromString("1e0ca4ea-299d-4335-93eb-27fcfe7fa848");
 
         try {
-            if (mConnectedDevice != mDevice) {
-                System.out.println(mConnectedDevice + " " + mDevice);
+            // have to use the device address, the object seems to be non-equal after resume!!
+            if (mConnectedDevice == null || !mConnectedDevice.getAddress().matches(mDevice.getAddress())) {
+                if (mConnectedDevice != null)
+                    System.out.println(mConnectedDevice.hashCode() + " <> " + mDevice.hashCode());
                 Log.i(TAG, "Device has changed, connecting to: " + mDevice.getName());
                 if (output != null)
                     output.close();  // always close streams!
@@ -227,9 +227,7 @@ public class NotificationServerBluetooth implements NotificationServer {
     public void load() {
         SharedPreferences settings = activity.getPreferences(Context.MODE_PRIVATE);
         String btDeviceAddress = settings.getString("btDeviceAddress", null);
-        if (btDeviceAddress != null) {
-            mDevice = mBluetoothAdapter.getRemoteDevice(btDeviceAddress);
-        }
+        setDevice(mBluetoothAdapter.getRemoteDevice(btDeviceAddress));
     }
 
     public void save() {
