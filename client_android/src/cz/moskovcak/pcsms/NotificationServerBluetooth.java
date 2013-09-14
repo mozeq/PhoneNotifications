@@ -227,18 +227,23 @@ public class NotificationServerBluetooth implements NotificationServer {
     public void load() {
         SharedPreferences settings = activity.getPreferences(Context.MODE_PRIVATE);
         String btDeviceAddress = settings.getString("btDeviceAddress", null);
-        setDevice(mBluetoothAdapter.getRemoteDevice(btDeviceAddress));
+
+        if (btDeviceAddress != null)
+            setDevice(mBluetoothAdapter.getRemoteDevice(btDeviceAddress));
     }
 
     public void save() {
         // We need an Editor object to make preference changes.
         // All objects are from android.context.Context
-        SharedPreferences settings = activity.getPreferences(Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = settings.edit();
-        editor.putString("btDeviceAddress", mDevice.getAddress());
+        if (mDevice != null) {
+            SharedPreferences settings = activity.getPreferences(Context.MODE_PRIVATE);
+            SharedPreferences.Editor editor = settings.edit();
+            editor.putString("btDeviceAddress", mDevice.getAddress());
 
-        // Commit the edits!
-        editor.commit();
+            // Commit the edits!
+            editor.commit();
+        }
+
     }
 
     @Override
