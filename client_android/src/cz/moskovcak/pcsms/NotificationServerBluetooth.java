@@ -17,6 +17,7 @@ import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -92,11 +93,24 @@ public class NotificationServerBluetooth implements NotificationServer {
     private void resetBt() {
         Log.i(TAG, "Resetting bluetooth");
 
-        //BT state changed receiver
-        BluetoothStateChangedReceiver mBluetoothReceiver = new BluetoothStateChangedReceiver(this);
         IntentFilter mBluetoothIntentFilter= new IntentFilter();
         mBluetoothIntentFilter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);
-        activity.registerReceiver(mBluetoothReceiver, mBluetoothIntentFilter);
+        activity.registerReceiver(new BroadcastReceiver() {
+            public void onReceive(Context context, Intent intent) {
+                //we use STATE_OFF as a fallback and just give up if it's off
+                int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.STATE_OFF);
+                System.out.println("Bluetooth state changed to: " + state);
+                if (state == BluetoothAdapter.STATE_ON) {
+                    Log.i(TAG, "Bluetooth is settled, trying to connect");
+                    NotificationServerBluetooth.this.connect();
+                }
+                else if (state == BluetoothAdapter.STATE_OFF) {
+                    Log.i(TAG, "Bluetooth is disabled, disconnecting");
+                    BluetoothAdapter.getDefaultAdapter().enable();
+                    //btServer.disconnect();
+                }
+            }
+        }, mBluetoothIntentFilter);
         if (mBluetoothAdapter.disable() == false) {
             if (mBluetoothAdapter.getState() != BluetoothAdapter.STATE_OFF)
                 Log.e(TAG, "Can't disable the bluetooth adapter");
